@@ -7,7 +7,7 @@
 #include<sys/socket.h>
 #include<pthread.h>
 
-#define BUFFER 10
+#define BUFFER 200
 
 void error_handling(char* message){
         fputs(message,stderr);
@@ -21,7 +21,7 @@ void* Server(void* arg){
         if(Socket == -1)
                 error_handling("socket()");
 
-        char message[BUFFER];
+        char  message[BUFFER];
 
 
         struct sockaddr_in addr;
@@ -43,21 +43,22 @@ void* Server(void* arg){
         struct sockaddr_in client_addr;
         int addrlen;
         char buf[BUFFER];
-        char opcode[1];
+//	char * token;
+	int numbytes;
 
        while(1){
-                addrlen = sizeof(client_addr);                    
+                addrlen = sizeof(client_addr);                  
                 client_sock = accept(Socket,(struct sockaddr_in*)&client_addr, &addrlen);
-
                 if(client_sock == -1){
                         error_handling("accept()");
                         continue;
                 }
 
                 while(1){
-                        read(client_sock, message, BUFFER);
-			printf("%s", message);
-             		memset(message,0,BUFFER);
+                        numbytes = recv(client_sock, message, sizeof(message), 0);	
+//			token = strtok(message, "\n");
+			puts(message);
+             		memset(message,0,strlen(message));
 		}
 	}
 }
@@ -70,6 +71,8 @@ int main(){
 	char IP[100];
         int sock;
         char message[BUFFER];
+	char buf[BUFFER];
+	char ID[BUFFER];
 
         struct sockaddr_in serv_adr;
 
@@ -94,14 +97,17 @@ int main(){
 
         while(connect(sock,(const struct sockaddr*)&serv_adr, sizeof(serv_adr))==-1);
         puts("Connected.....");
-
+	
+	printf("Insert your ID : ");
+	scanf("%s", ID);
+	fflush(stdin);
 
         while(1){
-	        printf("Message : ");
                 scanf("%s",message);
                 fflush(stdin);
-                write(sock, message, BUFFER);
-		memset(message,0,BUFFER);
+		sprintf(buf, "%s : %s",ID, message);
+                send(sock, buf, strlen(buf), 0);
+		memset(buf,0,strlen(buf));
 	}
 
 	pthread_join(server, NULL);
